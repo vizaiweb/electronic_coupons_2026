@@ -201,6 +201,34 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
         }
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: #f8f9f3;
+            border-radius: 60px;
+        }
+        .filter-bar label {
+            margin-bottom: 0;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .filter-bar select {
+            width: auto;
+            min-width: 240px;
+            flex: 1;
+        }
+        .filter-badge {
+            background: #2d6a4f;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
         .footer-buttons {
             margin-top: 20px;
             display: flex;
@@ -211,6 +239,7 @@
         @media (max-width: 800px) {
             body { padding: 12px; }
             .left-panel, .right-panel { min-width: 100%; }
+            .filter-bar select { width: 100%; }
         }
         hr {
             margin: 18px 0;
@@ -244,6 +273,12 @@
             cursor: pointer;
             margin-right: 6px;
         }
+        .table-count-info {
+            font-size: 0.8rem;
+            color: #5a7c6b;
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -251,7 +286,7 @@
     <div class="header">
         <h1>🎁 澳門社區消費大獎賞 2026</h1>
         <p>📅 活動期間：2026年4月10日 - 6月18日 | 週五至週日抽券 · 週一至週四核銷</p>
-        <div class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入)</div>
+        <div class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入 | 週次篩選)</div>
     </div>
 
     <div class="dashboard">
@@ -314,7 +349,15 @@
             </div>
 
             <div class="card">
-                <h2>📋 所有優惠券記錄 (依週次排列)</h2>
+                <h2>📋 所有優惠券記錄</h2>
+                <!-- 新增週次篩選功能 -->
+                <div class="filter-bar">
+                    <label>🔍 篩選週次：</label>
+                    <select id="weekFilterSelect">
+                        <option value="all">📅 全部週次 (顯示所有記錄)</option>
+                    </select>
+                    <span id="filterResultCount" class="filter-badge">0 筆記錄</span>
+                </div>
                 <div style="overflow-x: auto;">
                     <table id="vouchersTable">
                         <thead>
@@ -325,6 +368,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="table-count-info" id="tableInfoMsg"></div>
             </div>
         </div>
     </div>
@@ -353,7 +397,7 @@
             if (sunday > endDate) break;
             const weekLabel = `第${weekIndex}週 (${formatDate(friday)} ~ ${formatDate(sunday)})`;
             const weekKey = `${formatDateKey(friday)}_to_${formatDateKey(sunday)}`;
-            weeks.push({ key: weekKey, label: weekLabel, friday: new Date(friday), sunday: new Date(sunday) });
+            weeks.push({ key: weekKey, label: weekLabel, friday: new Date(friday), sunday: new Date(sunday), index: weekIndex });
             startFriday.setDate(startFriday.getDate() + 7);
             weekIndex++;
         }
@@ -389,6 +433,7 @@
     let vouchers = [];       // 每個物件: { displayId, originalId, weekKey, amount, wallet, used, usedTimestamp, createdAt }
     let weeksData = [];     // 儲存週次清單
     let nextDisplayId = 1;  // 從 0001 開始的順序ID
+    let currentWeekFilter = "all";  // 當前篩選的週次key，all表示全部
     
     // 輔助函數: 重新計算所有優惠券的顯示ID (按建立時間排序後賦予 0001,0002...)
     function reassignDisplayIds() {
@@ -416,10 +461,11 @@
         return wk ? wk.label : key;
     }
     
-    // 重新整理下拉選單 (週次選擇)
+    // 重新整理下拉選單 (週次選擇、篩選下拉)
     function refreshDropdowns() {
         let weekSelectAdd = document.getElementById('weekSelectAdd');
         let weekStatsSelect = document.getElementById('weekStatsSelect');
+        let weekFilterSelect = document.getElementById('weekFilterSelect');
         
         if(weekSelectAdd) {
             weekSelectAdd.innerHTML = '';
@@ -442,59 +488,64 @@
             if(weeksData.length) weekStatsSelect.value = weeksData[0].key;
             weekStatsSelect.dispatchEvent(new Event('change'));
         }
-    }
-    
-    // 更新表格顯示及週次統計
-    function renderAll() {
-        renderVouchersTable();
-        updateStatsBySelectedWeek();
-        refreshDropdowns();
-    }
-    
-    // 刪除單筆優惠券
-    function deleteVoucher(displayId) {
-        if (confirm(`確定要刪除 ID ${String(displayId).padStart(4,'0')} 的優惠券嗎？此操作無法復原。`)) {
-            const index = vouchers.findIndex(v => v.displayId === displayId);
-            if (index !== -1) {
-                vouchers.splice(index, 1);
-                // 重新分配所有顯示ID
-                reassignDisplayIds();
-                saveToLocalStorage();
-                renderAll();
-                alert('已成功刪除優惠券');
+        // 更新篩選下拉選單 (保留「全部週次」選項)
+        if(weekFilterSelect) {
+            // 保留第一個「全部」選項
+            let currentFilterValue = weekFilterSelect.value;
+            weekFilterSelect.innerHTML = '<option value="all">📅 全部週次 (顯示所有記錄)</option>';
+            weeksData.forEach(wk => {
+                let option = document.createElement('option');
+                option.value = wk.key;
+                option.textContent = wk.label;
+                weekFilterSelect.appendChild(option);
+            });
+            // 恢復之前選擇的值 (如果還存在的話)
+            if(currentFilterValue !== "all" && weeksData.some(w => w.key === currentFilterValue)) {
+                weekFilterSelect.value = currentFilterValue;
+                currentWeekFilter = currentFilterValue;
             } else {
-                alert('找不到該筆資料');
+                weekFilterSelect.value = "all";
+                currentWeekFilter = "all";
             }
         }
     }
     
-    // 標記使用 (核銷)
-    function markVoucherAsUsed(displayId) {
-        let voucher = vouchers.find(v => v.displayId === displayId);
-        if(!voucher) {
-            alert('找不到優惠券');
-            return;
+    // 根據篩選條件取得要顯示的優惠券列表
+    function getFilteredVouchers() {
+        if (currentWeekFilter === "all") {
+            return [...vouchers];
+        } else {
+            return vouchers.filter(v => v.weekKey === currentWeekFilter);
         }
-        if(voucher.used) {
-            alert('優惠券已經核銷過！');
-            return;
-        }
-        voucher.used = true;
-        voucher.usedTimestamp = new Date().toISOString();
-        saveToLocalStorage();
-        renderAll();
-        alert(`優惠券 ID ${String(displayId).padStart(4,'0')} 已標記為已使用！`);
     }
     
+    // 更新表格顯示 (支援週次篩選)
     function renderVouchersTable() {
         let tbody = document.getElementById('vouchersTableBody');
+        let filterResultCountSpan = document.getElementById('filterResultCount');
+        let tableInfoMsg = document.getElementById('tableInfoMsg');
+        
         if(!tbody) return;
-        if(vouchers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>';
+        
+        const filteredVouchers = getFilteredVouchers();
+        const totalFiltered = filteredVouchers.length;
+        
+        if(filteredVouchers.length === 0) {
+            if (currentWeekFilter === "all") {
+                tbody.innerHTML = '<tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>';
+                if(filterResultCountSpan) filterResultCountSpan.innerText = `0 筆記錄`;
+                if(tableInfoMsg) tableInfoMsg.innerText = '';
+            } else {
+                let weekLabel = getWeekLabelByKey(currentWeekFilter);
+                tbody.innerHTML = `<tr><td colspan="7">此週期 (${weekLabel}) 暫無優惠券記錄</td></tr>`;
+                if(filterResultCountSpan) filterResultCountSpan.innerText = `0 筆記錄`;
+                if(tableInfoMsg) tableInfoMsg.innerText = `目前篩選：${weekLabel}，共 0 筆`;
+            }
             return;
         }
+        
         // 依顯示ID排序
-        let sorted = [...vouchers].sort((a,b) => a.displayId - b.displayId);
+        let sorted = [...filteredVouchers].sort((a,b) => a.displayId - b.displayId);
         tbody.innerHTML = '';
         sorted.forEach(v => {
             let row = tbody.insertRow();
@@ -533,14 +584,64 @@
             };
             actionCell.appendChild(delBtn);
         });
+        
+        // 更新篩選統計訊息
+        if(filterResultCountSpan) {
+            filterResultCountSpan.innerText = `${totalFiltered} 筆記錄`;
+        }
+        if(tableInfoMsg) {
+            if (currentWeekFilter === "all") {
+                tableInfoMsg.innerText = `📋 顯示全部 ${totalFiltered} 筆優惠券記錄`;
+            } else {
+                let weekLabel = getWeekLabelByKey(currentWeekFilter);
+                tableInfoMsg.innerText = `🔍 篩選週次：${weekLabel}，共 ${totalFiltered} 筆記錄`;
+            }
+        }
     }
     
-    // 取得指定週次的優惠券清單
+    // 刪除單筆優惠券 (注意：刪除後需重新整理所有篩選及顯示)
+    function deleteVoucher(displayId) {
+        if (confirm(`確定要刪除 ID ${String(displayId).padStart(4,'0')} 的優惠券嗎？此操作無法復原。`)) {
+            const index = vouchers.findIndex(v => v.displayId === displayId);
+            if (index !== -1) {
+                vouchers.splice(index, 1);
+                // 重新分配所有顯示ID
+                reassignDisplayIds();
+                saveToLocalStorage();
+                // 重新整理所有UI (包含篩選下拉保持狀態)
+                refreshDropdowns();
+                renderAll();
+                alert('已成功刪除優惠券');
+            } else {
+                alert('找不到該筆資料');
+            }
+        }
+    }
+    
+    // 標記使用 (核銷)
+    function markVoucherAsUsed(displayId) {
+        let voucher = vouchers.find(v => v.displayId === displayId);
+        if(!voucher) {
+            alert('找不到優惠券');
+            return;
+        }
+        if(voucher.used) {
+            alert('優惠券已經核銷過！');
+            return;
+        }
+        voucher.used = true;
+        voucher.usedTimestamp = new Date().toISOString();
+        saveToLocalStorage();
+        renderAll();
+        alert(`優惠券 ID ${String(displayId).padStart(4,'0')} 已標記為已使用！`);
+    }
+    
+    // 取得指定週次的優惠券清單 (用於統計看板)
     function getVouchersByWeek(weekKey) {
         return vouchers.filter(v => v.weekKey === weekKey);
     }
     
-    // 更新統計
+    // 更新統計 (根據統計看板的週次)
     function updateStatsBySelectedWeek() {
         let weekSelect = document.getElementById('weekStatsSelect');
         if(!weekSelect || !weekSelect.value) return;
@@ -588,10 +689,12 @@
             createdAt: new Date().toISOString()
         };
         vouchers.push(newVoucher);
-        // 重新排序確保ID順序（以防萬一）
+        // 重新排序確保ID順序
         reassignDisplayIds();
         saveToLocalStorage();
         amountInput.value = '';
+        // 刷新所有UI
+        refreshDropdowns();
         renderAll();
         alert(`已成功記錄 ${amount} MOP 優惠券 (錢包:${wallet})，ID: ${String(newVoucher.displayId).padStart(4,'0')}`);
     }
@@ -601,7 +704,7 @@
         let dataToStore = {
             vouchers: vouchers,
             nextDisplayId: nextDisplayId,
-            version: '2.0',
+            version: '2.1',
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
@@ -615,7 +718,6 @@
                 let data = JSON.parse(raw);
                 if(data.vouchers && Array.isArray(data.vouchers)) {
                     vouchers = data.vouchers;
-                    // 確保每個優惠券都有必要欄位
                     vouchers = vouchers.filter(v => v && typeof v === 'object').map(v => {
                         return {
                             displayId: v.displayId !== undefined ? v.displayId : 0,
@@ -644,7 +746,6 @@
         }
         // 確保顯示ID連續且無重複
         reassignDisplayIds();
-        renderAll();
     }
     
     // 匯出JSON
@@ -687,6 +788,7 @@
                     if (imported.nextDisplayId) nextDisplayId = imported.nextDisplayId;
                     reassignDisplayIds();
                     saveToLocalStorage();
+                    refreshDropdowns();
                     renderAll();
                     alert(`匯入成功，共 ${vouchers.length} 筆優惠券記錄`);
                 } else {
@@ -704,8 +806,32 @@
             vouchers = [];
             reassignDisplayIds();
             saveToLocalStorage();
+            refreshDropdowns();
             renderAll();
             alert('所有數據已重置');
+        }
+    }
+    
+    // 渲染全部 (表格 + 統計 + 篩選狀態保留)
+    function renderAll() {
+        renderVouchersTable();      // 使用當前 currentWeekFilter 渲染
+        updateStatsBySelectedWeek();
+        // 不需要每次都刷新所有下拉，但保留篩選下拉的值同步
+        let weekFilterSelect = document.getElementById('weekFilterSelect');
+        if(weekFilterSelect && weekFilterSelect.value !== currentWeekFilter) {
+            currentWeekFilter = weekFilterSelect.value;
+            renderVouchersTable();  // 重新確保同步
+        }
+    }
+    
+    // 監聽篩選下拉變化
+    function bindFilterEvent() {
+        let weekFilterSelect = document.getElementById('weekFilterSelect');
+        if(weekFilterSelect) {
+            weekFilterSelect.addEventListener('change', (e) => {
+                currentWeekFilter = e.target.value;
+                renderVouchersTable();
+            });
         }
     }
     
@@ -742,6 +868,7 @@
             e.target.value = '';
         });
         document.getElementById('resetDataBtn')?.addEventListener('click', resetAllData);
+        bindFilterEvent();
     }
     
     // 主初始化
@@ -750,6 +877,8 @@
         initWalletSelect();
         bindEvents();
         loadFromLocalStorage();
+        refreshDropdowns();
+        renderAll();
         if(weeksData.length === 0) {
             alert('注意: 活動期間未包含有效週五-週日區間，請檢查日期設定');
         }
