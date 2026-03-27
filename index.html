@@ -1,3 +1,5 @@
+以下是根據您的要求修改後的完整HTML代碼。它移除了指定區域，優化了面額選擇器，並調整了文字顯示，同時保持了原有的版面佈局。
+```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -279,6 +281,30 @@
             margin-bottom: 12px;
             padding-left: 8px;
         }
+        /* 新增優惠券區域整合樣式 */
+        .add-voucher-area {
+            background: #f9faf5;
+            border-radius: 48px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8dd;
+        }
+        .add-form-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 16px;
+        }
+        .add-form-row .form-field {
+            flex: 1;
+            min-width: 150px;
+        }
+        .add-form-row .form-field label {
+            margin-bottom: 4px;
+        }
+        .add-form-row button {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -290,35 +316,8 @@
     </div>
 
     <div class="dashboard">
-        <!-- 左側：新增抽到的優惠券 -->
+        <!-- 左側：資料儲存／載入 (移除新增抽中電子優惠券區塊) -->
         <div class="left-panel">
-            <div class="card">
-                <h2>📌 新增抽中電子優惠券</h2>
-                <div class="form-group">
-                    <label>📆 抽券週 (周五至周日歸屬週)</label>
-                    <select id="weekSelectAdd">
-                        <!-- 動態填入週次 -->
-                    </select>
-                    <div class="note">系統自動依活動週五至週日區間生成週次 (2026/4/10起)</div>
-                </div>
-                <div class="form-group">
-                    <label>💰 電子優惠券面額 (MOP)</label>
-                    <input type="number" id="voucherAmount" step="1" min="1" placeholder="例: 10, 20, 50">
-                </div>
-                <div class="form-group">
-                    <label>👛 電子錢包 (支付工具)</label>
-                    <select id="walletSelect">
-                        <option value="">-- 請選擇錢包 --</option>
-                    </select>
-                </div>
-                <button class="btn" id="addVoucherBtn">➕ 記錄抽中優惠券</button>
-                <hr>
-                <div class="form-group">
-                    <label>✅ 快速核銷優惠券 (點選表格中的「核銷」按鈕)</label>
-                    <div class="note">💡 提示：請到下方優惠券記錄表格中，點擊對應的「核銷」按鈕即可標記已使用</div>
-                </div>
-            </div>
-
             <div class="card">
                 <h2>💾 資料儲存／載入</h2>
                 <p style="margin: 8px 0 12px 0; font-size:0.85rem;">自動保存至瀏覽器本地儲存(LocalStorage)，亦可手動匯出/匯入備份</p>
@@ -327,6 +326,7 @@
                 <input type="file" id="importFileInput" accept=".json" style="display:none">
                 <button class="btn btn-outline" id="importDataBtn">📂 匯入資料 (JSON)</button>
                 <button class="btn btn-danger" id="resetDataBtn" style="background:#bc6c25;">⚠️ 重置所有數據</button>
+                <div class="note" style="margin-top:12px;">🔒 所有資料僅儲存於此裝置，清除瀏覽器資料會遺失，建議定期匯出備份。</div>
             </div>
         </div>
 
@@ -343,14 +343,42 @@
                     <div class="stat"><div class="stat-value" id="weekTotalMinSpend">0</div><div class="stat-label">總最低消費額(MOP) (券面額×3)</div></div>
                     <div class="stat"><div class="stat-value" id="weekTotalSpent">0</div><div class="stat-label">已核銷總消費(MOP) (已使用券實付)</div></div>
                 </div>
-                <div style="margin-top: 8px; font-size:0.8rem; background:#eef2e6; border-radius: 20px; padding: 8px 12px;">
-                    💡 最低消費額 = 優惠面值 × 3 (單筆實付金額門檻)，已使用優惠券會計入「已核銷總消費」
-                </div>
+                <!-- 已移除提示區塊：💡 最低消費額 = 優惠面值 × 3 ... -->
             </div>
 
             <div class="card">
                 <h2>📋 所有優惠券記錄</h2>
-                <!-- 新增週次篩選功能 -->
+                <!-- 新增優惠券整合在此處 (取代原本左側的新增區塊) -->
+                <div class="add-voucher-area">
+                    <div class="add-form-row">
+                        <div class="form-field">
+                            <label>📆 抽券週次</label>
+                            <select id="weekSelectAdd">
+                                <!-- 動態填入週次 -->
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>💰 面額 (MOP)</label>
+                            <select id="voucherAmountSelect">
+                                <option value="10">10 MOP</option>
+                                <option value="20">20 MOP</option>
+                                <option value="50" selected>50 MOP</option>
+                                <option value="100">100 MOP</option>
+                                <option value="200">200 MOP</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>👛 電子錢包</label>
+                            <select id="walletSelect">
+                                <option value="">-- 請選擇錢包 --</option>
+                            </select>
+                        </div>
+                        <button class="btn" id="addVoucherBtn">➕ 記錄抽中優惠券</button>
+                    </div>
+                    <div class="note" style="margin-top: 12px;">✨ 新增後將自動產生順序ID (例: 0001, 0002...)，並即時儲存。</div>
+                </div>
+
+                <!-- 篩選週次功能 -->
                 <div class="filter-bar">
                     <label>🔍 篩選週次：</label>
                     <select id="weekFilterSelect">
@@ -417,7 +445,7 @@
         return `${y}-${m}-${d}`;
     }
     
-    // ---------- 錢包預設清單 (只有8個指定選項) ----------
+    // ---------- 錢包預設清單 (8個指定選項) ----------
     const WALLETS = [
         "MPay",
         "支付寶（澳門）",
@@ -490,7 +518,6 @@
         }
         // 更新篩選下拉選單 (保留「全部週次」選項)
         if(weekFilterSelect) {
-            // 保留第一個「全部」選項
             let currentFilterValue = weekFilterSelect.value;
             weekFilterSelect.innerHTML = '<option value="all">📅 全部週次 (顯示所有記錄)</option>';
             weeksData.forEach(wk => {
@@ -558,7 +585,7 @@
             row.insertCell(4).innerText = `${minSpend} MOP`;
             let statusCell = row.insertCell(5);
             if(v.used) {
-                statusCell.innerHTML = '<span class="used-badge used-true">✓ 已使用</span>';
+                statusCell.innerHTML = '<span class="used-badge used-true">✓已使用</span>';
             } else {
                 statusCell.innerHTML = '<span class="used-badge">未使用</span>';
             }
@@ -599,16 +626,14 @@
         }
     }
     
-    // 刪除單筆優惠券 (注意：刪除後需重新整理所有篩選及顯示)
+    // 刪除單筆優惠券
     function deleteVoucher(displayId) {
         if (confirm(`確定要刪除 ID ${String(displayId).padStart(4,'0')} 的優惠券嗎？此操作無法復原。`)) {
             const index = vouchers.findIndex(v => v.displayId === displayId);
             if (index !== -1) {
                 vouchers.splice(index, 1);
-                // 重新分配所有顯示ID
                 reassignDisplayIds();
                 saveToLocalStorage();
-                // 重新整理所有UI (包含篩選下拉保持狀態)
                 refreshDropdowns();
                 renderAll();
                 alert('已成功刪除優惠券');
@@ -657,7 +682,7 @@
         document.getElementById('weekTotalSpent').innerText = totalSpent.toFixed(0);
     }
     
-    // 新增優惠券
+    // 新增優惠券 (使用下拉式面額)
     function addVoucher() {
         let weekSelect = document.getElementById('weekSelectAdd');
         let weekKey = weekSelect.value;
@@ -665,10 +690,10 @@
             alert('請選擇抽券週次');
             return;
         }
-        let amountInput = document.getElementById('voucherAmount');
-        let amount = parseFloat(amountInput.value);
+        let amountSelect = document.getElementById('voucherAmountSelect');
+        let amount = parseFloat(amountSelect.value);
         if(isNaN(amount) || amount <= 0) {
-            alert('請輸入有效的優惠券面額 (正整數/正數)');
+            alert('請選擇有效的面額');
             return;
         }
         let wallet = document.getElementById('walletSelect').value;
@@ -689,11 +714,8 @@
             createdAt: new Date().toISOString()
         };
         vouchers.push(newVoucher);
-        // 重新排序確保ID順序
         reassignDisplayIds();
         saveToLocalStorage();
-        amountInput.value = '';
-        // 刷新所有UI
         refreshDropdowns();
         renderAll();
         alert(`已成功記錄 ${amount} MOP 優惠券 (錢包:${wallet})，ID: ${String(newVoucher.displayId).padStart(4,'0')}`);
@@ -744,7 +766,6 @@
             vouchers = [];
             reassignDisplayIds();
         }
-        // 確保顯示ID連續且無重複
         reassignDisplayIds();
     }
     
@@ -814,13 +835,12 @@
     
     // 渲染全部 (表格 + 統計 + 篩選狀態保留)
     function renderAll() {
-        renderVouchersTable();      // 使用當前 currentWeekFilter 渲染
+        renderVouchersTable();
         updateStatsBySelectedWeek();
-        // 不需要每次都刷新所有下拉，但保留篩選下拉的值同步
         let weekFilterSelect = document.getElementById('weekFilterSelect');
         if(weekFilterSelect && weekFilterSelect.value !== currentWeekFilter) {
             currentWeekFilter = weekFilterSelect.value;
-            renderVouchersTable();  // 重新確保同步
+            renderVouchersTable();
         }
     }
     
@@ -877,14 +897,4 @@
         initWalletSelect();
         bindEvents();
         loadFromLocalStorage();
-        refreshDropdowns();
-        renderAll();
-        if(weeksData.length === 0) {
-            alert('注意: 活動期間未包含有效週五-週日區間，請檢查日期設定');
-        }
-    }
-    
-    init();
-</script>
-</body>
-</html>
+        refresh
