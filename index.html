@@ -1,3 +1,6 @@
+以下是修改後的完整HTML代碼，已將「💾 資料儲存／載入」區塊移動到頁面最下方。
+
+```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -306,12 +309,6 @@
             color: #c0cfc3;
             font-style: italic;
         }
-        .note-cell-content {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: nowrap;
-        }
         .modal {
             display: none;
             position: fixed;
@@ -351,14 +348,12 @@
             margin-top: 12px;
             padding-left: 8px;
         }
-        .action-buttons {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-wrap: nowrap;
-        }
         .table-responsive {
             overflow-x: auto;
+        }
+        /* 儲存區塊置底樣式 */
+        .storage-section {
+            margin-top: 28px;
         }
     </style>
 </head>
@@ -398,16 +393,6 @@
                 </div>
                 <button class="btn" id="addVoucherBtn">➕ 記錄抽中優惠券</button>
             </div>
-
-            <div class="card">
-                <h2>💾 資料儲存／載入</h2>
-                <p style="margin: 8px 0 12px 0; font-size:0.85rem;">自動保存至瀏覽器本地儲存，亦可手動匯出/匯入備份</p>
-                <button class="btn btn-outline" id="saveDataBtn">💾 手動儲存至瀏覽器</button>
-                <button class="btn btn-outline" id="exportDataBtn">📁 匯出資料 (JSON)</button>
-                <input type="file" id="importFileInput" accept=".json" style="display:none">
-                <button class="btn btn-outline" id="importDataBtn">📂 匯入資料 (JSON)</button>
-                <button class="btn btn-danger" id="resetDataBtn" style="background:#bc6c25;">⚠️ 重置所有數據</button>
-            </div>
         </div>
 
         <div class="right-panel">
@@ -439,15 +424,28 @@
                 <div class="table-responsive">
                     <table id="vouchersTable">
                         <thead>
-                            <tr><th style="width:60px">ID</th><th style="width:160px">歸屬週次</th><th style="width:70px">面額</th><th style="width:120px">電子錢包</th><th style="width:100px">最低消費額</th><th style="width:70px">使用狀態</th><th style="width:200px">備註</th><th style="width:100px">操作</th>
+                            <tr><th style="width:60px">ID</th><th style="width:160px">歸屬週次</th><th style="width:70px">面額</th><th style="width:120px">電子錢包</th><th style="width:100px">最低消費額</th><th style="width:70px">使用狀態</th><th style="width:100px">操作</th><th style="width:200px">備註</th>
                         </thead>
                         <tbody id="vouchersTableBody">
                             <tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>
                         </tbody>
-                    </table>
+                     </table>
                 </div>
                 <div class="table-count-info" id="tableInfoMsg"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- 💾 資料儲存／載入 放在最下方 -->
+    <div class="storage-section">
+        <div class="card">
+            <h2>💾 資料儲存／載入</h2>
+            <p style="margin: 8px 0 12px 0; font-size:0.85rem;">自動保存至瀏覽器本地儲存，亦可手動匯出/匯入備份</p>
+            <button class="btn btn-outline" id="saveDataBtn">💾 手動儲存至瀏覽器</button>
+            <button class="btn btn-outline" id="exportDataBtn">📁 匯出資料 (JSON)</button>
+            <input type="file" id="importFileInput" accept=".json" style="display:none">
+            <button class="btn btn-outline" id="importDataBtn">📂 匯入資料 (JSON)</button>
+            <button class="btn btn-danger" id="resetDataBtn" style="background:#bc6c25;">⚠️ 重置所有數據</button>
         </div>
     </div>
 </div>
@@ -706,22 +704,8 @@
                 statusCell.innerHTML = '<span class="used-badge" style="white-space:nowrap">未用</span>';
             }
             
-            // 備註欄位 - 按鈕和文字在同一行
-            let noteCell = row.insertCell(6);
-            if(v.note && v.note.trim() !== '') {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
-                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>
-                                        <span class="note-text-display" style="white-space:nowrap">${escapeHtml(v.note)}</span>
-                                      </div>`;
-            } else {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
-                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>
-                                        <span class="note-text-display note-placeholder" style="white-space:nowrap">點擊「新增備註」</span>
-                                      </div>`;
-            }
-            
-            // 操作欄位
-            let actionCell = row.insertCell(7);
+            // 操作欄位 (第6欄)
+            let actionCell = row.insertCell(6);
             let actionDiv = document.createElement('div');
             actionDiv.style.display = 'flex';
             actionDiv.style.gap = '6px';
@@ -747,6 +731,20 @@
             };
             actionDiv.appendChild(delBtn);
             actionCell.appendChild(actionDiv);
+            
+            // 備註欄位 (第7欄)
+            let noteCell = row.insertCell(7);
+            if(v.note && v.note.trim() !== '') {
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>
+                                        <span class="note-text-display" style="white-space:nowrap">${escapeHtml(v.note)}</span>
+                                      </div>`;
+            } else {
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>
+                                        <span class="note-text-display note-placeholder" style="white-space:nowrap">點擊「新增備註」</span>
+                                      </div>`;
+            }
         });
         
         if(filterResultCountSpan) {
@@ -833,7 +831,7 @@
         let dataToStore = {
             vouchers: vouchers,
             nextDisplayId: nextDisplayId,
-            version: '2.4',
+            version: '2.5',
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
@@ -1003,3 +1001,4 @@
 </script>
 </body>
 </html>
+```
