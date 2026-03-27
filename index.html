@@ -1,4 +1,4 @@
-以下是根據您的要求修改後的HTML代碼。已將電子優惠券面額輸入框改為下拉式選單，選項包含10、20、50、100、200 MOP，並保持與電子錢包下拉表單相同的長度樣式。
+以下是根據您的要求修改後的完整HTML代碼。
 ```html
 <!DOCTYPE html>
 <html lang="zh-HK">
@@ -38,6 +38,7 @@
             margin: 0;
             opacity: 0.9;
             font-size: 0.95rem;
+            display: inline-block;
         }
         .date-badge {
             background: #f4a261;
@@ -47,6 +48,9 @@
             font-size: 0.8rem;
             font-weight: bold;
             margin-top: 10px;
+        }
+        .header-sub {
+            margin-top: 8px;
         }
         /* 兩欄布局 */
         .dashboard {
@@ -246,18 +250,16 @@
             cursor: pointer;
             margin-right: 6px;
         }
-        /* 確保下拉表單統一長度樣式 */
-        select {
-            width: 100%;
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🎁 澳門社區消費大獎賞 2026</h1>
-        <p>📅 活動期間：2026年4月10日 - 6月18日 | 週五至週日抽券 · 週一至週四核銷</p>
-        <div class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入)</div>
+        <div class="header-sub">
+            <p>📅 活動期間：2026年4月10日 - 6月18日 | 週五至週日抽券 · 週一至週四核銷</p>
+            <span class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入)</span>
+        </div>
     </div>
 
     <div class="dashboard">
@@ -270,7 +272,6 @@
                     <select id="weekSelectAdd">
                         <!-- 動態填入週次 -->
                     </select>
-                    <div class="note">系統自動依活動週五至週日區間生成週次 (2026/4/10起)</div>
                 </div>
                 <div class="form-group">
                     <label>💰 電子優惠券面額 (MOP)</label>
@@ -289,16 +290,11 @@
                     </select>
                 </div>
                 <button class="btn" id="addVoucherBtn">➕ 記錄抽中優惠券</button>
-                <hr>
-                <div class="form-group">
-                    <label>✅ 快速核銷優惠券 (點選表格中的「核銷」按鈕)</label>
-                    <div class="note">💡 提示：請到下方優惠券記錄表格中，點擊對應的「核銷」按鈕即可標記已使用</div>
-                </div>
             </div>
 
             <div class="card">
                 <h2>💾 資料儲存／載入</h2>
-                <p style="margin: 8px 0 12px 0; font-size:0.85rem;">自動保存至瀏覽器本地儲存(LocalStorage)，亦可手動匯出/匯入備份</p>
+                <p style="margin: 8px 0 12px 0; font-size:0.85rem;">自動保存至瀏覽器本地儲存，亦可手動匯出/匯入備份</p>
                 <button class="btn btn-outline" id="saveDataBtn">💾 手動儲存至瀏覽器</button>
                 <button class="btn btn-outline" id="exportDataBtn">📁 匯出資料 (JSON)</button>
                 <input type="file" id="importFileInput" accept=".json" style="display:none">
@@ -335,7 +331,7 @@
                         <tbody id="vouchersTableBody">
                             <tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td>
                         </tbody>
-                    </table>
+                     </table>
                 </div>
             </div>
         </div>
@@ -519,7 +515,7 @@
             row.insertCell(4).innerText = `${minSpend} MOP`;
             let statusCell = row.insertCell(5);
             if(v.used) {
-                statusCell.innerHTML = '<span class="used-badge used-true">✓ 已使用</span>';
+                statusCell.innerHTML = '<span class="used-badge used-true">已使用</span>';
             } else {
                 statusCell.innerHTML = '<span class="used-badge">未使用</span>';
             }
