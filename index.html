@@ -1,5 +1,3 @@
-以下是根據您的要求修改後的完整HTML代碼。
-```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -21,7 +19,6 @@
             max-width: 1400px;
             margin: 0 auto;
         }
-        /* 標題區 */
         .header {
             background: linear-gradient(135deg, #2d6a4f, #1b4d3e);
             color: white;
@@ -47,12 +44,11 @@
             border-radius: 40px;
             font-size: 0.8rem;
             font-weight: bold;
-            margin-top: 10px;
+            margin-left: 12px;
         }
         .header-sub {
             margin-top: 8px;
         }
-        /* 兩欄布局 */
         .dashboard {
             display: flex;
             flex-wrap: wrap;
@@ -66,7 +62,6 @@
             flex: 2;
             min-width: 500px;
         }
-        /* 卡片通用樣式 */
         .card {
             background: white;
             border-radius: 28px;
@@ -121,21 +116,13 @@
             margin-right: 10px;
             margin-bottom: 8px;
         }
-        .btn-secondary {
-            background: #e9c46a;
-            color: #2d3e2b;
-        }
-        .btn-danger {
-            background: #e76f51;
-        }
         .btn-outline {
             background: transparent;
             border: 1px solid #2d6a4f;
             color: #2d6a4f;
         }
-        .btn-sm {
-            padding: 5px 12px;
-            font-size: 0.75rem;
+        .btn-danger {
+            background: #e76f51;
         }
         .btn:hover {
             filter: brightness(0.95);
@@ -168,9 +155,6 @@
         .used-true {
             background: #2d6a4f;
             color: white;
-        }
-        .action-buttons button {
-            margin: 0 4px;
         }
         .summary-stats {
             display: flex;
@@ -207,25 +191,9 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
         }
-        .footer-buttons {
-            margin-top: 20px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
         @media (max-width: 800px) {
             body { padding: 12px; }
             .left-panel, .right-panel { min-width: 100%; }
-        }
-        hr {
-            margin: 18px 0;
-            border-color: #cde0d4;
-        }
-        .note {
-            font-size: 0.7rem;
-            color: #6c8b7a;
-            margin-top: 8px;
         }
         .delete-btn {
             background: #e76f51;
@@ -263,15 +231,12 @@
     </div>
 
     <div class="dashboard">
-        <!-- 左側：新增抽到的優惠券 -->
         <div class="left-panel">
             <div class="card">
                 <h2>📌 新增抽中電子優惠券</h2>
                 <div class="form-group">
                     <label>📆 抽券週 (周五至周日歸屬週)</label>
-                    <select id="weekSelectAdd">
-                        <!-- 動態填入週次 -->
-                    </select>
+                    <select id="weekSelectAdd"></select>
                 </div>
                 <div class="form-group">
                     <label>💰 電子優惠券面額 (MOP)</label>
@@ -303,7 +268,6 @@
             </div>
         </div>
 
-        <!-- 右側：週次統計與優惠券列表 -->
         <div class="right-panel">
             <div class="card">
                 <h2>📊 週次統計看板</h2>
@@ -329,9 +293,9 @@
                             <tr><th>ID</th><th>歸屬週次</th><th>面額(MOP)</th><th>電子錢包</th><th>最低消費額(MOP)</th><th>使用狀態</th><th>操作</th>
                         </thead>
                         <tbody id="vouchersTableBody">
-                            <tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td>
+                            <tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>
                         </tbody>
-                     </table>
+                    </table>
                 </div>
             </div>
         </div>
@@ -339,15 +303,12 @@
 </div>
 
 <script>
-    // ----------------------------- 活動週期配置 -------------------------
-    const ACTIVITY_START = new Date(2026, 3, 10);  // 4月10日 (月份0-index)
-    const ACTIVITY_END = new Date(2026, 5, 18);    // 6月18日
+    const ACTIVITY_START = new Date(2026, 3, 10);
+    const ACTIVITY_END = new Date(2026, 5, 18);
     
-    // 生成週次清單: 從第一個周五~周日週期開始 (以週五為起始，周日結束)
     function generateWeeksList() {
         let weeks = [];
         let current = new Date(ACTIVITY_START);
-        // 找到起始日期之後第一個星期五 (4月10日剛好是週五)
         let startFriday = new Date(current);
         while (startFriday.getDay() !== 5) {
             startFriday.setDate(startFriday.getDate() + 1);
@@ -381,7 +342,6 @@
         return `${y}-${m}-${d}`;
     }
     
-    // ---------- 錢包預設清單 (只有8個指定選項) ----------
     const WALLETS = [
         "MPay",
         "支付寶（澳門）",
@@ -393,19 +353,15 @@
         "極易付（UePay）"
     ];
     
-    // 全域資料結構
-    let vouchers = [];       // 每個物件: { displayId, originalId, weekKey, amount, wallet, used, usedTimestamp, createdAt }
-    let weeksData = [];     // 儲存週次清單
-    let nextDisplayId = 1;  // 從 0001 開始的順序ID
+    let vouchers = [];
+    let weeksData = [];
+    let nextDisplayId = 1;
     
-    // 輔助函數: 重新計算所有優惠券的顯示ID (按建立時間排序後賦予 0001,0002...)
     function reassignDisplayIds() {
-        // 按照 createdAt 時間排序 (舊的在前，確保ID穩定)
         let sorted = [...vouchers].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         for (let i = 0; i < sorted.length; i++) {
             sorted[i].displayId = i + 1;
         }
-        // 更新 nextDisplayId
         if (vouchers.length > 0) {
             nextDisplayId = Math.max(...vouchers.map(v => v.displayId)) + 1;
         } else {
@@ -413,18 +369,15 @@
         }
     }
     
-    // 新增優惠券時自動給予新的 displayId
     function getNewDisplayId() {
         return nextDisplayId++;
     }
     
-    // 取得週次label
     function getWeekLabelByKey(key) {
         let wk = weeksData.find(w => w.key === key);
         return wk ? wk.label : key;
     }
     
-    // 重新整理下拉選單 (週次選擇)
     function refreshDropdowns() {
         let weekSelectAdd = document.getElementById('weekSelectAdd');
         let weekStatsSelect = document.getElementById('weekStatsSelect');
@@ -452,20 +405,17 @@
         }
     }
     
-    // 更新表格顯示及週次統計
     function renderAll() {
         renderVouchersTable();
         updateStatsBySelectedWeek();
         refreshDropdowns();
     }
     
-    // 刪除單筆優惠券
     function deleteVoucher(displayId) {
         if (confirm(`確定要刪除 ID ${String(displayId).padStart(4,'0')} 的優惠券嗎？此操作無法復原。`)) {
             const index = vouchers.findIndex(v => v.displayId === displayId);
             if (index !== -1) {
                 vouchers.splice(index, 1);
-                // 重新分配所有顯示ID
                 reassignDisplayIds();
                 saveToLocalStorage();
                 renderAll();
@@ -476,7 +426,6 @@
         }
     }
     
-    // 標記使用 (核銷)
     function markVoucherAsUsed(displayId) {
         let voucher = vouchers.find(v => v.displayId === displayId);
         if(!voucher) {
@@ -501,7 +450,6 @@
             tbody.innerHTML = '<tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>';
             return;
         }
-        // 依顯示ID排序
         let sorted = [...vouchers].sort((a,b) => a.displayId - b.displayId);
         tbody.innerHTML = '';
         sorted.forEach(v => {
@@ -531,7 +479,6 @@
                 };
                 actionCell.appendChild(useBtn);
             }
-            // 刪除按鈕 (不論是否使用皆可刪除)
             let delBtn = document.createElement('button');
             delBtn.innerText = '刪除';
             delBtn.className = 'delete-btn';
@@ -543,12 +490,10 @@
         });
     }
     
-    // 取得指定週次的優惠券清單
     function getVouchersByWeek(weekKey) {
         return vouchers.filter(v => v.weekKey === weekKey);
     }
     
-    // 更新統計
     function updateStatsBySelectedWeek() {
         let weekSelect = document.getElementById('weekStatsSelect');
         if(!weekSelect || !weekSelect.value) return;
@@ -564,7 +509,6 @@
         document.getElementById('weekTotalSpent').innerText = totalSpent.toFixed(0);
     }
     
-    // 新增優惠券 (使用下拉式面額)
     function addVoucher() {
         let weekSelect = document.getElementById('weekSelectAdd');
         let weekKey = weekSelect.value;
@@ -596,14 +540,12 @@
             createdAt: new Date().toISOString()
         };
         vouchers.push(newVoucher);
-        // 重新排序確保ID順序（以防萬一）
         reassignDisplayIds();
         saveToLocalStorage();
         renderAll();
         alert(`已成功記錄 ${amount} MOP 優惠券 (錢包:${wallet})，ID: ${String(newVoucher.displayId).padStart(4,'0')}`);
     }
     
-    // 儲存至localStorage
     function saveToLocalStorage() {
         let dataToStore = {
             vouchers: vouchers,
@@ -614,7 +556,6 @@
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
     }
     
-    // 載入localStorage
     function loadFromLocalStorage() {
         let raw = localStorage.getItem('macau_voucher_2026');
         if(raw) {
@@ -622,7 +563,6 @@
                 let data = JSON.parse(raw);
                 if(data.vouchers && Array.isArray(data.vouchers)) {
                     vouchers = data.vouchers;
-                    // 確保每個優惠券都有必要欄位
                     vouchers = vouchers.filter(v => v && typeof v === 'object').map(v => {
                         return {
                             displayId: v.displayId !== undefined ? v.displayId : 0,
@@ -649,12 +589,10 @@
             vouchers = [];
             reassignDisplayIds();
         }
-        // 確保顯示ID連續且無重複
         reassignDisplayIds();
         renderAll();
     }
     
-    // 匯出JSON
     function exportData() {
         let exportObj = {
             vouchers: vouchers,
@@ -674,7 +612,6 @@
         URL.revokeObjectURL(url);
     }
     
-    // 匯入JSON
     function importData(file) {
         let reader = new FileReader();
         reader.onload = function(e) {
@@ -716,7 +653,6 @@
         }
     }
     
-    // 初始化錢包下拉選項 (8個)
     function initWalletSelect() {
         let walletSelect = document.getElementById('walletSelect');
         if(walletSelect) {
@@ -730,7 +666,6 @@
         }
     }
     
-    // 監聽事件
     function bindEvents() {
         let weekStatsSelect = document.getElementById('weekStatsSelect');
         if(weekStatsSelect) {
@@ -751,7 +686,6 @@
         document.getElementById('resetDataBtn')?.addEventListener('click', resetAllData);
     }
     
-    // 主初始化
     function init() {
         weeksData = generateWeeksList();
         initWalletSelect();
@@ -766,4 +700,3 @@
 </script>
 </body>
 </html>
-```
