@@ -1,4 +1,6 @@
+以下是修改後的完整HTML代碼，已將「操作」與「備註」欄位位置互換。
 
+```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -349,7 +351,6 @@
         .table-responsive {
             overflow-x: auto;
         }
-        /* 儲存區塊置底樣式 */
         .storage-section {
             margin-top: 28px;
         }
@@ -422,12 +423,12 @@
                 <div class="table-responsive">
                     <table id="vouchersTable">
                         <thead>
-                            <tr><th style="width:60px">ID</th><th style="width:160px">歸屬週次</th><th style="width:70px">面額</th><th style="width:120px">電子錢包</th><th style="width:100px">最低消費額</th><th style="width:70px">使用狀態</th><th style="width:100px">操作</th><th style="width:200px">備註</th>
+                            <tr><th style="width:60px">ID</th><th style="width:160px">歸屬週次</th><th style="width:70px">面額</th><th style="width:120px">電子錢包</th><th style="width:100px">最低消費額</th><th style="width:70px">使用狀態</th><th style="width:100px">備註</th><th style="width:100px">操作</th>
                         </thead>
                         <tbody id="vouchersTableBody">
                             <tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>
                         </tbody>
-                     </table>
+                    </table>
                 </div>
                 <div class="table-count-info" id="tableInfoMsg"></div>
             </div>
@@ -702,8 +703,22 @@
                 statusCell.innerHTML = '<span class="used-badge" style="white-space:nowrap">未用</span>';
             }
             
-            // 操作欄位 (第6欄)
-            let actionCell = row.insertCell(6);
+            // 備註欄位 (第6欄)
+            let noteCell = row.insertCell(6);
+            if(v.note && v.note.trim() !== '') {
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>
+                                        <span class="note-text-display" style="white-space:nowrap">${escapeHtml(v.note)}</span>
+                                      </div>`;
+            } else {
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>
+                                        <span class="note-text-display note-placeholder" style="white-space:nowrap">點擊「新增備註」</span>
+                                      </div>`;
+            }
+            
+            // 操作欄位 (第7欄)
+            let actionCell = row.insertCell(7);
             let actionDiv = document.createElement('div');
             actionDiv.style.display = 'flex';
             actionDiv.style.gap = '6px';
@@ -729,20 +744,6 @@
             };
             actionDiv.appendChild(delBtn);
             actionCell.appendChild(actionDiv);
-            
-            // 備註欄位 (第7欄)
-            let noteCell = row.insertCell(7);
-            if(v.note && v.note.trim() !== '') {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
-                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>
-                                        <span class="note-text-display" style="white-space:nowrap">${escapeHtml(v.note)}</span>
-                                      </div>`;
-            } else {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
-                                        <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>
-                                        <span class="note-text-display note-placeholder" style="white-space:nowrap">點擊「新增備註」</span>
-                                      </div>`;
-            }
         });
         
         if(filterResultCountSpan) {
@@ -829,7 +830,7 @@
         let dataToStore = {
             vouchers: vouchers,
             nextDisplayId: nextDisplayId,
-            version: '2.5',
+            version: '2.6',
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
@@ -999,3 +1000,4 @@
 </script>
 </body>
 </html>
+```
