@@ -1,6 +1,4 @@
-以下是修改後的完整HTML代碼，新增了按週篩選功能和備註欄位。
-
-```html
+html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -381,8 +379,8 @@
                 </div>
                 <div class="summary-stats">
                     <div class="stat"><div class="stat-value" id="weekTotalVoucherAmount">0</div><div class="stat-label">本週抽券總金額(MOP)</div></div>
-                    <div class="stat"><div class="stat-value" id="weekTotalMinSpend">0</div><div class="stat-label">總最低消費額(MOP) (券面額×3)</div></div>
-                    <div class="stat"><div class="stat-value" id="weekTotalSpent">0</div><div class="stat-label">已核銷總消費(MOP) (已使用券實付)</div></div>
+                    <div class="stat"><div class="stat-value" id="weekTotalMinSpend">0</div><div class="stat-label">總最低消費額 (券面額×3)</div></div>
+                    <div class="stat"><div class="stat-value" id="weekTotalSpent">0</div><div class="stat-label">已核銷總消費 (已用券實付)</div></div>
                 </div>
                 <div style="margin-top: 8px; font-size:0.8rem; background:#eef2e6; border-radius: 20px; padding: 8px 12px;">
                     💡 最低消費額 = 優惠面值 × 3 (單筆實付金額門檻)，已使用優惠券會計入「已核銷總消費」
@@ -401,12 +399,12 @@
                 <div style="overflow-x: auto;">
                     <table id="vouchersTable">
                         <thead>
-                            <tr><th>ID</th><th>歸屬週次</th><th>面額(MOP)</th><th>電子錢包</th><th>最低消費額(MOP)</th><th>使用狀態</th><th>備註</th><th>操作</th>
+                            <tr><th>ID</th><th>歸屬週次</th><th>面額</th><th>電子錢包</th><th>最低消費額</th><th>使用狀態</th><th>備註</th><th>操作</th>
                         </thead>
                         <tbody id="vouchersTableBody">
                             <tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>
                         </tbody>
-                    </table>
+                     </table>
                 </div>
                 <div class="table-count-info" id="tableInfoMsg"></div>
             </div>
@@ -592,7 +590,7 @@
         voucher.usedTimestamp = new Date().toISOString();
         saveToLocalStorage();
         renderAll();
-        alert(`優惠券 ID ${String(displayId).padStart(4,'0')} 已標記為已使用！`);
+        alert(`優惠券 ID ${String(displayId).padStart(4,'0')} 已標記為已用！`);
     }
     
     function openNoteModal(displayId) {
@@ -657,25 +655,25 @@
             let idFormatted = String(v.displayId).padStart(4, '0');
             row.insertCell(0).innerText = idFormatted;
             row.insertCell(1).innerText = getWeekLabelByKey(v.weekKey);
-            row.insertCell(2).innerText = `${v.amount} MOP`;
+            row.insertCell(2).innerText = `${v.amount}`;
             row.insertCell(3).innerText = v.wallet;
             let minSpend = v.amount * 3;
-            row.insertCell(4).innerText = `${minSpend} MOP`;
+            row.insertCell(4).innerText = `${minSpend}`;
             let statusCell = row.insertCell(5);
             if(v.used) {
-                statusCell.innerHTML = '<span class="used-badge used-true">已使用</span>';
+                statusCell.innerHTML = '<span class="used-badge used-true">已用</span>';
             } else {
-                statusCell.innerHTML = '<span class="used-badge">未使用</span>';
+                statusCell.innerHTML = '<span class="used-badge">未用</span>';
             }
             
             // 備註欄位
             let noteCell = row.insertCell(6);
             if(v.note && v.note.trim() !== '') {
                 noteCell.innerHTML = `<div class="note-text">${escapeHtml(v.note)}</div>
-                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">✏️ 編輯</button>`;
+                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>`;
             } else {
                 noteCell.innerHTML = `<div class="note-text note-placeholder">點擊「新增備註」</div>
-                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">📝 新增備註</button>`;
+                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>`;
             }
             
             // 操作欄位
@@ -957,4 +955,3 @@
 </script>
 </body>
 </html>
-```
