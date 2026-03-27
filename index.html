@@ -1,3 +1,6 @@
+以下是修改後的完整HTML代碼，新增了按週篩選功能和備註欄位。
+
+```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -89,7 +92,7 @@
             font-size: 0.85rem;
             color: #2d5a3b;
         }
-        select, input {
+        select, input, textarea {
             width: 100%;
             padding: 10px 14px;
             border-radius: 60px;
@@ -99,7 +102,12 @@
             outline: none;
             transition: 0.2s;
         }
-        select:focus, input:focus {
+        textarea {
+            border-radius: 20px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        select:focus, input:focus, textarea:focus {
             border-color: #2d6a4f;
             box-shadow: 0 0 0 2px rgba(45,106,79,0.2);
         }
@@ -124,6 +132,10 @@
         .btn-danger {
             background: #e76f51;
         }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+        }
         .btn:hover {
             filter: brightness(0.95);
             transform: translateY(-1px);
@@ -137,6 +149,7 @@
             text-align: left;
             padding: 12px 8px;
             border-bottom: 1px solid #e2efe7;
+            vertical-align: top;
         }
         th {
             background: #eef4ea;
@@ -191,9 +204,39 @@
             flex-wrap: wrap;
             margin-bottom: 20px;
         }
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: #f8f9f3;
+            border-radius: 60px;
+        }
+        .filter-bar label {
+            margin-bottom: 0;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .filter-bar select {
+            width: auto;
+            min-width: 240px;
+            flex: 1;
+        }
+        .filter-badge {
+            background: #2d6a4f;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
         @media (max-width: 800px) {
             body { padding: 12px; }
             .left-panel, .right-panel { min-width: 100%; }
+            .filter-bar select { width: 100%; }
+            th, td { white-space: normal; }
         }
         .delete-btn {
             background: #e76f51;
@@ -217,6 +260,67 @@
             font-size: 0.7rem;
             cursor: pointer;
             margin-right: 6px;
+        }
+        .edit-note-btn {
+            background: #e9c46a;
+            color: #2d3e2b;
+            border: none;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 4px;
+            width: 100%;
+        }
+        .note-text {
+            font-size: 0.75rem;
+            color: #5a7c6b;
+            margin-top: 4px;
+            word-break: break-word;
+            max-width: 180px;
+        }
+        .note-placeholder {
+            color: #c0cfc3;
+            font-style: italic;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 28px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #1e4620;
+        }
+        .modal-content textarea {
+            width: 100%;
+            margin: 16px 0;
+            min-height: 100px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .table-count-info {
+            font-size: 0.8rem;
+            color: #5a7c6b;
+            margin-top: 12px;
+            padding-left: 8px;
         }
     </style>
 </head>
@@ -286,18 +390,38 @@
             </div>
 
             <div class="card">
-                <h2>📋 所有優惠券記錄 (依週次排列)</h2>
+                <h2>📋 所有優惠券記錄</h2>
+                <div class="filter-bar">
+                    <label>🔍 篩選週次：</label>
+                    <select id="weekFilterSelect">
+                        <option value="all">📅 全部週次 (顯示所有記錄)</option>
+                    </select>
+                    <span id="filterResultCount" class="filter-badge">0 筆記錄</span>
+                </div>
                 <div style="overflow-x: auto;">
                     <table id="vouchersTable">
                         <thead>
-                            <tr><th>ID</th><th>歸屬週次</th><th>面額(MOP)</th><th>電子錢包</th><th>最低消費額(MOP)</th><th>使用狀態</th><th>操作</th>
+                            <tr><th>ID</th><th>歸屬週次</th><th>面額(MOP)</th><th>電子錢包</th><th>最低消費額(MOP)</th><th>使用狀態</th><th>備註</th><th>操作</th>
                         </thead>
                         <tbody id="vouchersTableBody">
-                            <tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>
+                            <tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="table-count-info" id="tableInfoMsg"></div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 備註編輯模態框 -->
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <h3>✏️ 編輯備註</h3>
+        <textarea id="noteInput" placeholder="輸入備註資訊...&#10;例如：使用店家、消費明細、到期日等"></textarea>
+        <div class="modal-buttons">
+            <button class="btn btn-outline btn-sm" id="closeNoteModal">取消</button>
+            <button class="btn btn-sm" id="saveNoteBtn">儲存</button>
         </div>
     </div>
 </div>
@@ -356,6 +480,8 @@
     let vouchers = [];
     let weeksData = [];
     let nextDisplayId = 1;
+    let currentWeekFilter = "all";
+    let editingVoucherId = null;
     
     function reassignDisplayIds() {
         let sorted = [...vouchers].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -381,6 +507,7 @@
     function refreshDropdowns() {
         let weekSelectAdd = document.getElementById('weekSelectAdd');
         let weekStatsSelect = document.getElementById('weekStatsSelect');
+        let weekFilterSelect = document.getElementById('weekFilterSelect');
         
         if(weekSelectAdd) {
             weekSelectAdd.innerHTML = '';
@@ -402,6 +529,31 @@
             });
             if(weeksData.length) weekStatsSelect.value = weeksData[0].key;
             weekStatsSelect.dispatchEvent(new Event('change'));
+        }
+        if(weekFilterSelect) {
+            let currentFilterValue = weekFilterSelect.value;
+            weekFilterSelect.innerHTML = '<option value="all">📅 全部週次 (顯示所有記錄)</option>';
+            weeksData.forEach(wk => {
+                let option = document.createElement('option');
+                option.value = wk.key;
+                option.textContent = wk.label;
+                weekFilterSelect.appendChild(option);
+            });
+            if(currentFilterValue !== "all" && weeksData.some(w => w.key === currentFilterValue)) {
+                weekFilterSelect.value = currentFilterValue;
+                currentWeekFilter = currentFilterValue;
+            } else {
+                weekFilterSelect.value = "all";
+                currentWeekFilter = "all";
+            }
+        }
+    }
+    
+    function getFilteredVouchers() {
+        if (currentWeekFilter === "all") {
+            return [...vouchers];
+        } else {
+            return vouchers.filter(v => v.weekKey === currentWeekFilter);
         }
     }
     
@@ -443,14 +595,62 @@
         alert(`優惠券 ID ${String(displayId).padStart(4,'0')} 已標記為已使用！`);
     }
     
+    function openNoteModal(displayId) {
+        editingVoucherId = displayId;
+        let voucher = vouchers.find(v => v.displayId === displayId);
+        let noteTextarea = document.getElementById('noteInput');
+        if (voucher && voucher.note) {
+            noteTextarea.value = voucher.note;
+        } else {
+            noteTextarea.value = '';
+        }
+        document.getElementById('noteModal').style.display = 'flex';
+    }
+    
+    function saveNote() {
+        if (editingVoucherId !== null) {
+            let voucher = vouchers.find(v => v.displayId === editingVoucherId);
+            if (voucher) {
+                let noteText = document.getElementById('noteInput').value;
+                voucher.note = noteText;
+                saveToLocalStorage();
+                renderAll();
+                closeNoteModal();
+                alert('備註已儲存');
+            }
+        }
+    }
+    
+    function closeNoteModal() {
+        document.getElementById('noteModal').style.display = 'none';
+        editingVoucherId = null;
+    }
+    
     function renderVouchersTable() {
         let tbody = document.getElementById('vouchersTableBody');
+        let filterResultCountSpan = document.getElementById('filterResultCount');
+        let tableInfoMsg = document.getElementById('tableInfoMsg');
+        
         if(!tbody) return;
-        if(vouchers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7">暫無優惠券資料，請新增抽券記錄</td></tr>';
+        
+        const filteredVouchers = getFilteredVouchers();
+        const totalFiltered = filteredVouchers.length;
+        
+        if(filteredVouchers.length === 0) {
+            if (currentWeekFilter === "all") {
+                tbody.innerHTML = '<tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>';
+                if(filterResultCountSpan) filterResultCountSpan.innerText = `0 筆記錄`;
+                if(tableInfoMsg) tableInfoMsg.innerText = '';
+            } else {
+                let weekLabel = getWeekLabelByKey(currentWeekFilter);
+                tbody.innerHTML = `<tr><td colspan="8">此週期 (${weekLabel}) 暫無優惠券記錄</td></tr>`;
+                if(filterResultCountSpan) filterResultCountSpan.innerText = `0 筆記錄`;
+                if(tableInfoMsg) tableInfoMsg.innerText = `目前篩選：${weekLabel}，共 0 筆`;
+            }
             return;
         }
-        let sorted = [...vouchers].sort((a,b) => a.displayId - b.displayId);
+        
+        let sorted = [...filteredVouchers].sort((a,b) => a.displayId - b.displayId);
         tbody.innerHTML = '';
         sorted.forEach(v => {
             let row = tbody.insertRow();
@@ -467,7 +667,19 @@
             } else {
                 statusCell.innerHTML = '<span class="used-badge">未使用</span>';
             }
-            let actionCell = row.insertCell(6);
+            
+            // 備註欄位
+            let noteCell = row.insertCell(6);
+            if(v.note && v.note.trim() !== '') {
+                noteCell.innerHTML = `<div class="note-text">${escapeHtml(v.note)}</div>
+                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">✏️ 編輯</button>`;
+            } else {
+                noteCell.innerHTML = `<div class="note-text note-placeholder">點擊「新增備註」</div>
+                                      <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">📝 新增備註</button>`;
+            }
+            
+            // 操作欄位
+            let actionCell = row.insertCell(7);
             if(!v.used) {
                 let useBtn = document.createElement('button');
                 useBtn.innerText = '核銷';
@@ -487,6 +699,30 @@
                 deleteVoucher(v.displayId);
             };
             actionCell.appendChild(delBtn);
+        });
+        
+        if(filterResultCountSpan) {
+            filterResultCountSpan.innerText = `${totalFiltered} 筆記錄`;
+        }
+        if(tableInfoMsg) {
+            if (currentWeekFilter === "all") {
+                tableInfoMsg.innerText = `📋 顯示全部 ${totalFiltered} 筆優惠券記錄`;
+            } else {
+                let weekLabel = getWeekLabelByKey(currentWeekFilter);
+                tableInfoMsg.innerText = `🔍 篩選週次：${weekLabel}，共 ${totalFiltered} 筆記錄`;
+            }
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
         });
     }
     
@@ -537,6 +773,7 @@
             wallet: wallet,
             used: false,
             usedTimestamp: null,
+            note: '',
             createdAt: new Date().toISOString()
         };
         vouchers.push(newVoucher);
@@ -550,7 +787,7 @@
         let dataToStore = {
             vouchers: vouchers,
             nextDisplayId: nextDisplayId,
-            version: '2.0',
+            version: '2.2',
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
@@ -572,6 +809,7 @@
                             wallet: v.wallet || WALLETS[0],
                             used: v.used === true,
                             usedTimestamp: v.usedTimestamp || null,
+                            note: v.note || '',
                             createdAt: v.createdAt || new Date().toISOString()
                         };
                     });
@@ -626,6 +864,7 @@
                         wallet: v.wallet,
                         used: v.used || false,
                         usedTimestamp: v.usedTimestamp || null,
+                        note: v.note || '',
                         createdAt: v.createdAt || new Date().toISOString()
                     }));
                     if (imported.nextDisplayId) nextDisplayId = imported.nextDisplayId;
@@ -666,6 +905,16 @@
         }
     }
     
+    function bindFilterEvent() {
+        let weekFilterSelect = document.getElementById('weekFilterSelect');
+        if(weekFilterSelect) {
+            weekFilterSelect.addEventListener('change', (e) => {
+                currentWeekFilter = e.target.value;
+                renderVouchersTable();
+            });
+        }
+    }
+    
     function bindEvents() {
         let weekStatsSelect = document.getElementById('weekStatsSelect');
         if(weekStatsSelect) {
@@ -684,6 +933,13 @@
             e.target.value = '';
         });
         document.getElementById('resetDataBtn')?.addEventListener('click', resetAllData);
+        document.getElementById('closeNoteModal')?.addEventListener('click', closeNoteModal);
+        document.getElementById('saveNoteBtn')?.addEventListener('click', saveNote);
+        window.addEventListener('click', (e) => {
+            let modal = document.getElementById('noteModal');
+            if (e.target === modal) closeNoteModal();
+        });
+        bindFilterEvent();
     }
     
     function init() {
@@ -696,7 +952,9 @@
         }
     }
     
+    window.openNoteModal = openNoteModal;
     init();
 </script>
 </body>
 </html>
+```
