@@ -1,3 +1,5 @@
+以下是根據您的要求修改後的HTML代碼。已將電子優惠券面額輸入框改為下拉式選單，選項包含10、20、50、100、200 MOP，並保持與電子錢包下拉表單相同的長度樣式。
+```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -244,6 +246,10 @@
             cursor: pointer;
             margin-right: 6px;
         }
+        /* 確保下拉表單統一長度樣式 */
+        select {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -268,7 +274,13 @@
                 </div>
                 <div class="form-group">
                     <label>💰 電子優惠券面額 (MOP)</label>
-                    <input type="number" id="voucherAmount" step="1" min="1" placeholder="例: 10, 20, 50">
+                    <select id="voucherAmountSelect">
+                        <option value="10">10 MOP</option>
+                        <option value="20">20 MOP</option>
+                        <option value="50" selected>50 MOP</option>
+                        <option value="100">100 MOP</option>
+                        <option value="200">200 MOP</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>👛 電子錢包 (支付工具)</label>
@@ -556,7 +568,7 @@
         document.getElementById('weekTotalSpent').innerText = totalSpent.toFixed(0);
     }
     
-    // 新增優惠券
+    // 新增優惠券 (使用下拉式面額)
     function addVoucher() {
         let weekSelect = document.getElementById('weekSelectAdd');
         let weekKey = weekSelect.value;
@@ -564,10 +576,10 @@
             alert('請選擇抽券週次');
             return;
         }
-        let amountInput = document.getElementById('voucherAmount');
-        let amount = parseFloat(amountInput.value);
+        let amountSelect = document.getElementById('voucherAmountSelect');
+        let amount = parseFloat(amountSelect.value);
         if(isNaN(amount) || amount <= 0) {
-            alert('請輸入有效的優惠券面額 (正整數/正數)');
+            alert('請選擇有效的面額');
             return;
         }
         let wallet = document.getElementById('walletSelect').value;
@@ -591,7 +603,6 @@
         // 重新排序確保ID順序（以防萬一）
         reassignDisplayIds();
         saveToLocalStorage();
-        amountInput.value = '';
         renderAll();
         alert(`已成功記錄 ${amount} MOP 優惠券 (錢包:${wallet})，ID: ${String(newVoucher.displayId).padStart(4,'0')}`);
     }
@@ -759,3 +770,4 @@
 </script>
 </body>
 </html>
+```
