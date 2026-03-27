@@ -1,6 +1,4 @@
-以下是修改後的完整HTML代碼，已將「操作」與「備註」欄位位置互換。
 
-```html
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -144,19 +142,18 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            table-layout: fixed;
         }
         th, td {
             text-align: left;
             padding: 12px 8px;
             border-bottom: 1px solid #e2efe7;
             vertical-align: middle;
-            white-space: nowrap;
         }
         th {
             background: #eef4ea;
             font-weight: 600;
             color: #1f543e;
+            white-space: nowrap;
         }
         /* 歸屬週次允許換行 */
         td:nth-child(2), th:nth-child(2) {
@@ -164,9 +161,19 @@
             word-break: break-word;
             min-width: 140px;
         }
-        /* 備註欄位保持單行但內部flex */
-        td:nth-child(7) {
+        /* ID、面額、電子錢包、最低消費額、使用狀態保持單行 */
+        td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6) {
+            white-space: nowrap;
+        }
+        /* 備註欄位 - 設定最小寬度確保內容完整顯示 */
+        td:nth-child(7), th:nth-child(7) {
+            min-width: 180px;
             white-space: normal;
+        }
+        /* 操作欄位保持單行 */
+        td:nth-child(8), th:nth-child(8) {
+            white-space: nowrap;
+            min-width: 100px;
         }
         .used-badge {
             background: #a7c5b3;
@@ -253,12 +260,8 @@
             .table-responsive {
                 overflow-x: auto;
             }
-            td, th {
-                white-space: nowrap;
-            }
-            td:nth-child(2), th:nth-child(2) {
-                white-space: normal;
-                min-width: 120px;
+            td:nth-child(7), th:nth-child(7) {
+                min-width: 200px;
             }
         }
         .delete-btn {
@@ -295,15 +298,15 @@
             font-size: 0.7rem;
             cursor: pointer;
             white-space: nowrap;
+            min-width: 70px;
         }
         .note-text-display {
             font-size: 0.75rem;
             color: #5a7c6b;
-            word-break: keep-all;
-            white-space: nowrap;
-            overflow-x: auto;
-            max-width: 150px;
+            word-break: break-word;
+            max-width: 250px;
             display: inline-block;
+            line-height: 1.4;
         }
         .note-placeholder {
             color: #c0cfc3;
@@ -353,6 +356,12 @@
         }
         .storage-section {
             margin-top: 28px;
+        }
+        .note-cell-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
     </style>
 </head>
@@ -423,7 +432,7 @@
                 <div class="table-responsive">
                     <table id="vouchersTable">
                         <thead>
-                            <tr><th style="width:60px">ID</th><th style="width:160px">歸屬週次</th><th style="width:70px">面額</th><th style="width:120px">電子錢包</th><th style="width:100px">最低消費額</th><th style="width:70px">使用狀態</th><th style="width:100px">備註</th><th style="width:100px">操作</th>
+                            <tr><th style="min-width:60px">ID</th><th style="min-width:140px">歸屬週次</th><th style="min-width:70px">面額</th><th style="min-width:120px">電子錢包</th><th style="min-width:100px">最低消費額</th><th style="min-width:70px">使用狀態</th><th style="min-width:200px">備註</th><th style="min-width:100px">操作</th>
                         </thead>
                         <tbody id="vouchersTableBody">
                             <tr><td colspan="8">暫無優惠券資料，請新增抽券記錄</td></tr>
@@ -703,17 +712,17 @@
                 statusCell.innerHTML = '<span class="used-badge" style="white-space:nowrap">未用</span>';
             }
             
-            // 備註欄位 (第6欄)
+            // 備註欄位 (第6欄) - 使用 flex wrap 確保內容完整顯示
             let noteCell = row.insertCell(6);
             if(v.note && v.note.trim() !== '') {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">編輯</button>
-                                        <span class="note-text-display" style="white-space:nowrap">${escapeHtml(v.note)}</span>
+                                        <span class="note-text-display">${escapeHtml(v.note)}</span>
                                       </div>`;
             } else {
-                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                noteCell.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <button class="edit-note-btn" onclick="openNoteModal(${v.displayId})">新增備註</button>
-                                        <span class="note-text-display note-placeholder" style="white-space:nowrap">點擊「新增備註」</span>
+                                        <span class="note-text-display note-placeholder">點擊「新增備註」</span>
                                       </div>`;
             }
             
@@ -723,7 +732,7 @@
             actionDiv.style.display = 'flex';
             actionDiv.style.gap = '6px';
             actionDiv.style.alignItems = 'center';
-            actionDiv.style.flexWrap = 'nowrap';
+            actionDiv.style.flexWrap = 'wrap';
             
             if(!v.used) {
                 let useBtn = document.createElement('button');
@@ -830,7 +839,7 @@
         let dataToStore = {
             vouchers: vouchers,
             nextDisplayId: nextDisplayId,
-            version: '2.6',
+            version: '2.7',
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('macau_voucher_2026', JSON.stringify(dataToStore));
@@ -1000,4 +1009,3 @@
 </script>
 </body>
 </html>
-```
