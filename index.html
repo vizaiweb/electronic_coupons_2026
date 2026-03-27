@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -35,7 +36,7 @@
             margin: 0;
             opacity: 0.9;
             font-size: 0.95rem;
-            display: inline-block;
+            line-height: 1.5;
         }
         .date-badge {
             background: #f4a261;
@@ -44,10 +45,24 @@
             border-radius: 40px;
             font-size: 0.8rem;
             font-weight: bold;
-            margin-left: 12px;
+            margin-top: 8px;
         }
         .header-sub {
             margin-top: 8px;
+        }
+        .header-date-line {
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @media (max-width: 700px) {
+            .header-date-line {
+                display: block;
+                margin-bottom: 6px;
+            }
+            .header-rule-line {
+                display: block;
+                margin-top: 4px;
+            }
         }
         .dashboard {
             display: flex;
@@ -380,10 +395,13 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>🎁 澳門社區消費大獎賞 2026</h1>
+        <h1>澳門社區消費大獎賞 2026</h1>
         <div class="header-sub">
-            <p>📅 活動期間：2026年4月10日 - 6月18日 | 週五至週日抽券 · 週一至週四核銷</p>
-            <span class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入)</span>
+            <p>
+                <span class="header-date-line">📅 活動期間：2026年4月10日 - 6月18日</span>
+                <span class="header-rule-line">週五至週日抽券 · 週一至週四核銷</span>
+            </p>
+            <div class="date-badge">✨ 電子優惠券管理工具 (支援儲存/載入)</div>
         </div>
     </div>
 
